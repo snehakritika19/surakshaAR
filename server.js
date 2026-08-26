@@ -1,0 +1,80 @@
+require("dotenv").config();
+
+const express = require("express");
+const { Pool } = require("pg");
+
+const app = express();
+
+app.use(express.json());
+
+// PostgreSQL connection
+const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT
+});
+
+// Test database connection
+pool.connect()
+    .then(() => {
+        console.log("PostgreSQL connected successfully!");
+    })
+    .catch((error) => {
+        console.error("PostgreSQL connection failed:", error.message);
+    });
+
+app.get("/", (req, res) => {
+    res.json({
+        message: "SurakshaAR backend is working!"
+    });
+});
+
+app.post("/api/attempts", async (req, res) => {
+    const {
+        workerId,
+        moduleId,
+        score,
+        retryCount,
+        criticalErrors,
+        completed
+    } = req.body;
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO attempts
+            (worker_id, module_id, score, retry_count, critical_errors, completed)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *`,
+            [
+                workerId,
+                moduleId,
+                score,
+                retryCount,
+                criticalErrors,
+                completed
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Training attempt saved successfully",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to save training attempt"
+        });
+    }
+});
+
+const PORT = 5000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
