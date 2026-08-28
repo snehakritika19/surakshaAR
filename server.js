@@ -96,7 +96,44 @@ app.get("/api/attempts", async (req, res) => {
         });
     }
 });
+// POST - Register a worker
+app.post("/api/workers", async (req, res) => {
+    const {
+        workerId,
+        name,
+        site,
+        language
+    } = req.body;
 
+    try {
+        const result = await pool.query(
+            `INSERT INTO workers
+            (worker_id, name, site, language)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *`,
+            [
+                workerId,
+                name,
+                site,
+                language
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Worker registered successfully",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to register worker"
+        });
+    }
+});
 // Start server
 const PORT = 5000;
 
