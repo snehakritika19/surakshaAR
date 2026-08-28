@@ -134,6 +134,27 @@ app.post("/api/workers", async (req, res) => {
         });
     }
 });
+// GET - Fetch all workers
+app.get("/api/workers", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM workers ORDER BY created_at DESC"
+        );
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch workers"
+        });
+    }
+});
 // Start server
 const PORT = 5000;
 
