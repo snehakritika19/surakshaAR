@@ -16,7 +16,7 @@ const pool = new Pool({
     port: process.env.DB_PORT
 });
 
-// Test database connection
+// Test PostgreSQL connection
 pool.connect()
     .then(() => {
         console.log("PostgreSQL connected successfully!");
@@ -25,12 +25,14 @@ pool.connect()
         console.error("PostgreSQL connection failed:", error.message);
     });
 
+// Home route
 app.get("/", (req, res) => {
     res.json({
         message: "SurakshaAR backend is working!"
     });
 });
 
+// POST - Save training attempt
 app.post("/api/attempts", async (req, res) => {
     const {
         workerId,
@@ -73,6 +75,29 @@ app.post("/api/attempts", async (req, res) => {
     }
 });
 
+// GET - Fetch all training attempts
+app.get("/api/attempts", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM attempts ORDER BY created_at DESC"
+        );
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch training attempts"
+        });
+    }
+});
+
+// Start server
 const PORT = 5000;
 
 app.listen(PORT, () => {
