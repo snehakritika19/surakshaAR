@@ -155,6 +155,27 @@ app.get("/api/workers", async (req, res) => {
         });
     }
 });
+// GET - Fetch all training modules
+app.get("/api/modules", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM modules ORDER BY created_at DESC"
+        );
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch training modules"
+        });
+    }
+});
 // Start server
 const PORT = 5000;
 
