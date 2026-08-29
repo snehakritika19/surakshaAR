@@ -176,6 +176,44 @@ app.get("/api/modules", async (req, res) => {
         });
     }
 });
+// GET - Dashboard summary
+app.get("/api/dashboard", async (req, res) => {
+    try {
+        const workersResult = await pool.query(
+            "SELECT COUNT(*) FROM workers"
+        );
+
+        const attemptsResult = await pool.query(
+            "SELECT COUNT(*) FROM attempts"
+        );
+
+        const completedResult = await pool.query(
+            "SELECT COUNT(*) FROM attempts WHERE completed = true"
+        );
+
+        const scoreResult = await pool.query(
+            "SELECT COALESCE(AVG(score), 0) FROM attempts"
+        );
+
+        res.json({
+            success: true,
+            data: {
+                totalWorkers: Number(workersResult.rows[0].count),
+                totalAttempts: Number(attemptsResult.rows[0].count),
+                completedAttempts: Number(completedResult.rows[0].count),
+                averageScore: Number(scoreResult.rows[0].coalesce)
+            }
+        });
+
+    } catch (error) {
+        console.error("Database error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch dashboard data"
+        });
+    }
+});
 // Start server
 const PORT = 5000;
 
