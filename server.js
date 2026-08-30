@@ -7,6 +7,23 @@ const app = express();
 
 app.use(express.json());
 
+function assessAttempt(score,retryCount,criticalErrors,completed)
+{
+    if ( criticalErrors > 0)
+    {
+        return "HIGH";
+    }
+    if(score <60 || !completed)
+    {
+        return "HIGH"
+    }
+    if(score < 80 || retryCount >= 2)
+    {
+        return "MEDIUM"
+    }
+    return "LOW";
+}
+
 // PostgreSQL connection
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -42,7 +59,7 @@ app.post("/api/attempts", async (req, res) => {
         criticalErrors,
         completed
     } = req.body;
-
+    const risk=assessAttempt(score,retryCount,criticalErrors,completed);
     try {
         const result = await pool.query(
             `INSERT INTO attempts
@@ -62,6 +79,7 @@ app.post("/api/attempts", async (req, res) => {
         res.status(201).json({
             success: true,
             message: "Training attempt saved successfully",
+            risk: risk,
             data: result.rows[0]
         });
 
